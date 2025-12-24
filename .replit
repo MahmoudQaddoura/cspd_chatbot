@@ -1,0 +1,74 @@
+modules = ["nodejs-20"]
+
+run = "npm install && npm run dev --workspace=backend"
+
+entrypoint = "backend/src/server.ts"
+
+[nix]
+channel = "unstable"
+
+[env]
+npm_config_legacy_peer_deps = "true"
+
+[userenv]
+
+[userenv.shared]
+OPENAI_MODEL = "gpt-4.1-mini"
+LANGFUSE_PUBLIC_KEY = "pk-lf-ebebedd6-99c6-4f12-b383-472ebbc7f04d"
+LANGFUSE_BASEURL = "https://cloud.langfuse.com"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend Dev"
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && npx tsx src/server.ts"
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Frontend Dev"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm run dev"
+waitForPort = 5000
+
+[[ports]]
+localPort = 3000
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[agent]
+expertMode = true
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["node", "backend/dist/server.js"]
+build = ["npm", "run", "build"]
